@@ -1,17 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-
-const loginSchema = z.object({
-    email: z.string().email("Invalid email"),
-    password: z
-        .string()
-        .min(6, "Password must be at least 6 characters"),
-});
+import { loginSchema } from "@/schema/login.schema";
 
 export default function LoginPage() {
     const {
@@ -22,7 +14,6 @@ export default function LoginPage() {
         resolver: zodResolver(loginSchema),
     });
 
-    const [success, setSuccess] = useState("");
     const router = useRouter();
 
     const onSubmit = (data) => {
@@ -83,12 +74,6 @@ export default function LoginPage() {
                             </p>
                         )}
                     </div>
-
-                    {success && (
-                        <p className="mt-4 text-center font-semibold text-green-600">
-                            {success}
-                        </p>
-                    )}
 
                     <button
                         type="submit"
