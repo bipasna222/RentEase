@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
     email: z.string().email("Invalid email"),
@@ -22,10 +23,26 @@ export default function LoginPage() {
     });
 
     const [success, setSuccess] = useState("");
+    const router = useRouter();
 
     const onSubmit = (data) => {
-        console.log(data);
-        setSuccess("Login successful!");
+        const savedUser = JSON.parse(localStorage.getItem("user"));
+
+        if (
+            savedUser &&
+            savedUser.email === data.email &&
+            savedUser.password === data.password
+        ) {
+            if (savedUser.role === "admin") {
+                router.push("/dashboard/admin");
+            } else if (savedUser.role === "landlord") {
+                router.push("/dashboard/landlord");
+            } else {
+                router.push("/dashboard/tenant");
+            }
+        } else {
+            alert("Invalid Email or Password");
+        }
     };
 
     return (
@@ -80,11 +97,6 @@ export default function LoginPage() {
                         Login
                     </button>
 
-                    {success && (
-                        <p className="mt-4 text-center font-semibold text-green-600">
-                            Login Successful!
-                        </p>
-                    )}
                 </form>
             </div>
         </div>

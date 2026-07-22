@@ -11,6 +11,7 @@ const registerSchema = z.object({
     password: z
         .string()
         .min(6, "Password must be at least 6 characters"),
+    role: z.string().min(1, "Please select a role"),
 });
 
 export default function RegisterPage() {
@@ -26,7 +27,10 @@ export default function RegisterPage() {
 
     const onSubmit = (data) => {
         console.log(data);
-        setSuccess("Registration successful!");
+
+        localStorage.setItem("user", JSON.stringify(data));
+
+        setSuccess("Registration Successful!");
     };
 
     return (
@@ -87,6 +91,26 @@ export default function RegisterPage() {
                         {errors.password && (
                             <p className="mt-1 text-sm text-red-500">
                                 {errors.password.message}
+                            </p>
+                        )}
+                    </div>
+                    <div className="mb-4">
+                        <label className="text-black">Role</label>
+
+                        <select
+                            {...register("role")}
+                            className="mt-1 w-full rounded border p-2 text-black"
+                            defaultValue=""
+                        >
+                            <option value="">Select Role</option>
+                            <option value="admin">Admin</option>
+                            <option value="landlord">Landlord</option>
+                            <option value="tenant">Tenant</option>
+                        </select>
+
+                        {errors.role && (
+                            <p className="mt-1 text-sm text-red-500">
+                                {errors.role.message}
                             </p>
                         )}
                     </div>
