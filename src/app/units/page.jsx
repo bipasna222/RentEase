@@ -5,6 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { unitSchema } from "@/schema/unit.schema";
 
+async function fetchUnits() {
+    const response = await fetch("/api/unit");
+    return await response.json();
+}
+
 export default function UnitsPage() {
     const {
         register,
@@ -20,28 +25,28 @@ export default function UnitsPage() {
     const [editIndex, setEditIndex] = useState(null);
 
     useEffect(() => {
-        const units = JSON.parse(localStorage.getItem("units")) || [];
-        setUnitList(units);
+        loadUnits();
     }, []);
 
-    const onSubmit = (data) => {
-        const units = JSON.parse(localStorage.getItem("units")) || [];
-
-        if (editIndex !== null) {
-            units[editIndex] = data;
-            setEditIndex(null);
-        } else {
-            units.push(data);
-        }
-
-        localStorage.setItem("units", JSON.stringify(units));
-        setUnitList(units);
-
-        reset();
-
-        console.log(units);
+    const loadUnits = async () => {
+        const data = await fetchUnits();
+        setUnitList(data);
     };
 
+    const onSubmit = async (data) => {
+        await fetch("/api/unit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+
+        await loadUnits();
+
+        reset();
+    };
+    
     const handleDelete = (index) => {
         const updatedUnits = unitList.filter((_, i) => i !== index);
 

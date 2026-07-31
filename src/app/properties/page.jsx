@@ -5,6 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { propertySchema } from "@/schema/property.schema";
 
+async function fetchProperties() {
+    const response = await fetch("/api/property");
+    return await response.json();
+}
+
 export default function propertiesPage() {
     const {
         register,
@@ -20,30 +25,26 @@ export default function propertiesPage() {
     const [editIndex, setEditIndex] = useState(null);
 
     useEffect(() => {
-        const properties =
-            JSON.parse(localStorage.getItem("properties")) || [];
-
-        setPropertyList(properties);
+        loadProperties();
     }, []);
 
-    const onSubmit = (data) => {
-        let properties =
-            JSON.parse(localStorage.getItem("properties")) || [];
+    const loadProperties = async () => {
+        const data = await fetchProperties();
+        setPropertyList(data);
+    };
 
-        if (editIndex !== null) {
-            properties[editIndex] = data;
-            setEditIndex(null);
-        } else {
-            properties.push(data);
-        }
+    const onSubmit = async (data) => {
+        await fetch("/api/property", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
 
-        localStorage.setItem("properties", JSON.stringify(properties));
-
-        setPropertyList(properties);
+        await loadProperties();
 
         reset();
-
-        console.log(properties);
     };
 
     const handleDelete = (index) => {
