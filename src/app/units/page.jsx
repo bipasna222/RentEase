@@ -34,24 +34,43 @@ export default function UnitsPage() {
     };
 
     const onSubmit = async (data) => {
-        await fetch("/api/unit", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
+        if (editIndex !== null) {
+            await fetch("/api/unit", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    _id: unitList[editIndex]._id,
+                    ...data,
+                }),
+            });
+
+            setEditIndex(null);
+        } else {
+            await fetch("/api/unit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+        }
 
         await loadUnits();
 
         reset();
     };
-    
-    const handleDelete = (index) => {
-        const updatedUnits = unitList.filter((_, i) => i !== index);
 
-        localStorage.setItem("units", JSON.stringify(updatedUnits));
-        setUnitList(updatedUnits);
+    const handleDelete = async (index) => {
+        await fetch(
+            `/api/unit?id=${unitList[index]._id}`,
+            {
+                method: "DELETE",
+            }
+        );
+
+        await loadUnits();
     };
 
     const handleEdit = (index) => {
