@@ -34,30 +34,39 @@ export default function propertiesPage() {
     };
 
     const onSubmit = async (data) => {
-        await fetch("/api/property", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-        });
+        if (editIndex !== null) {
+            await fetch("/api/property", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    _id: propertyList[editIndex]._id,
+                    ...data,
+                }),
+            });
+
+            setEditIndex(null);
+        } else {
+            await fetch("/api/property", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
+        }
 
         await loadProperties();
 
         reset();
     };
+    const handleDelete = async (id) => {
+        await fetch(`/api/property?id=${id}`, {
+            method: "DELETE",
+        });
 
-    const handleDelete = (index) => {
-        const updatedProperties = propertyList.filter(
-            (_, i) => i !== index
-        );
-
-        localStorage.setItem(
-            "properties",
-            JSON.stringify(updatedProperties)
-        );
-
-        setPropertyList(updatedProperties);
+        await loadProperties();
     };
 
     const handleEdit = (index) => {
@@ -176,7 +185,7 @@ export default function propertiesPage() {
 
                                     <button
                                         type="button"
-                                        onClick={() => handleDelete(index)}
+                                        onClick={() => handleDelete(property._id)}
                                         className="rounded bg-red-600 px-3 py-1 text-white"
                                     >
                                         Delete
