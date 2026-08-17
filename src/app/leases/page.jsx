@@ -5,6 +5,30 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { leaseSchema } from "@/schema/lease.schema";
 
+async function fetchLeases() {
+    const response = await fetch("/api/lease");
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+
+    return Array.isArray(data) ? data : [];
+}
+
+async function fetchUnits() {
+    const response = await fetch("/api/unit");
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+
+    return Array.isArray(data) ? data : [];
+}
+
 export default function LeasePage() {
     const {
         register,
@@ -21,53 +45,69 @@ export default function LeasePage() {
     const [editIndex, setEditIndex] = useState(null);
 
     useEffect(() => {
-        const leases =
-            JSON.parse(localStorage.getItem("leases")) || [];
+        loadData();
+    }, []);
 
+    const loadData = async () => {
+        const leases = await fetchLeases();
         setLeaseList(leases);
 
-        const units =
-            JSON.parse(localStorage.getItem("units")) || [];
+        const units = await fetchUnits();
+
+        console.log("Units from API:", units);
 
         const rentReadyUnits = units.filter(
             (unit) => unit.status === "Rent Ready"
         );
 
+        console.log("Rent Ready Units:", rentReadyUnits);
+
         setUnitList(rentReadyUnits);
+    };
 
-    }, []);
+    const loadLeases = async () => {
+        const data = await fetchLeases();
+        setLeaseList(data);
+    };
 
-    const onSubmit = (data) => {
-        const leases =
-            JSON.parse(localStorage.getItem("leases")) || [];
-
+    const onSubmit = async (data) => {
         if (editIndex !== null) {
-            leases[editIndex] = data;
+            await fetch("/api/lease", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    _id: leaseList[editIndex]._id,
+                    ...data,
+                }),
+            });
+
             setEditIndex(null);
         } else {
-            leases.push(data);
+            await fetch("/api/lease", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            });
         }
 
-        localStorage.setItem(
-            "leases",
-            JSON.stringify(leases)
-        );
-
-        setLeaseList(leases);
+        await loadLeases();
 
         reset();
     };
 
-    const handleDelete = (index) => {
-        const updated =
-            leaseList.filter((_, i) => i !== index);
-
-        localStorage.setItem(
-            "leases",
-            JSON.stringify(updated)
+    const handleDelete = async (index) => {
+        await fetch(
+            `/api/lease?id=${leaseList[index]._id}`,
+            {
+                method: "DELETE",
+            }
         );
 
-        setLeaseList(updated);
+        await loadLeases();
     };
 
     const getLeaseStatus = (startDate, endDate) => {
@@ -114,6 +154,8 @@ export default function LeasePage() {
                 </h2>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
+
+                    {/* Tenant Email */}
                     <div className="mb-4">
                         <label className="text-black">
                             Tenant Email
@@ -145,9 +187,9 @@ export default function LeasePage() {
                         >
                             <option value="">Select Unit</option>
 
-                            {unitList.map((unit, index) => (
+                            {unitList.map((unit) => (
                                 <option
-                                    key={index}
+                                    key={unit._id}
                                     value={unit.unitNumber}
                                 >
                                     {unit.unitNumber}
@@ -162,6 +204,7 @@ export default function LeasePage() {
                         )}
                     </div>
 
+                    {/* Lease Start */}
                     <div className="mb-4">
                         <label className="text-black">
                             Lease Start Date
@@ -180,6 +223,7 @@ export default function LeasePage() {
                         )}
                     </div>
 
+                    {/* Lease End */}
                     <div className="mb-4">
                         <label className="text-black">
                             Lease End Date
@@ -198,6 +242,7 @@ export default function LeasePage() {
                         )}
                     </div>
 
+                    {/* Security Deposit */}
                     <div className="mb-4">
                         <label className="text-black">
                             Security Deposit
@@ -227,6 +272,7 @@ export default function LeasePage() {
                     </button>
                 </form>
 
+                {/* Lease List */}
                 <div className="mt-8">
                     <h2 className="mb-4 text-xl font-bold text-black">
                         Lease List
@@ -239,7 +285,7 @@ export default function LeasePage() {
                     ) : (
                         leaseList.map((lease, index) => (
                             <div
-                                key={index}
+                                key={lease._id}
                                 className="mb-4 rounded border bg-gray-50 p-4"
                             >
                                 <p className="text-black">
@@ -263,8 +309,10 @@ export default function LeasePage() {
                                 </p>
 
                                 <p className="text-black">
-                                    <strong>Security Deposit:</strong> Rs.{" "}
-                                    {lease.securityDeposit}
+                                    <strong>
+                                        Security Deposit:
+                                    </strong>{" "}
+                                    Rs. {lease.securityDeposit}
                                 </p>
 
                                 <p className="text-black">
@@ -278,7 +326,9 @@ export default function LeasePage() {
                                 <div className="mt-4 flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => handleEdit(index)}
+                                        onClick={() =>
+                                            handleEdit(index)
+                                        }
                                         className="rounded bg-yellow-500 px-3 py-1 text-white"
                                     >
                                         Edit
@@ -286,7 +336,9 @@ export default function LeasePage() {
 
                                     <button
                                         type="button"
-                                        onClick={() => handleDelete(index)}
+                                        onClick={() =>
+                                            handleDelete(index)
+                                        }
                                         className="rounded bg-red-600 px-3 py-1 text-white"
                                     >
                                         Delete
