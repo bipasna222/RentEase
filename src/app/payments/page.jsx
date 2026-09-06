@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { paymentSchema } from "@/schema/payment.schema";
 
-export default function PaymentsPage() {
+export default function PaymentPage() {
     const {
         register,
         handleSubmit,
@@ -18,47 +18,52 @@ export default function PaymentsPage() {
     const [paymentList, setPaymentList] = useState([]);
 
     useEffect(() => {
-        const payments =
-            JSON.parse(localStorage.getItem("payments")) || [];
-
-        setPaymentList(payments);
+        loadPayments();
     }, []);
 
-    const onSubmit = (data) => {
-        const payments =
-            JSON.parse(localStorage.getItem("payments")) || [];
+    const loadPayments = async () => {
+        const response = await fetch("/api/payment");
 
-        payments.push({
-            ...data,
-            status: "Unpaid",
+        const data = await response.json();
+
+        setPaymentList(data);
+    };
+
+    const onSubmit = async (data) => {
+        await fetch("/api/payment", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                ...data,
+                status: "Unpaid",
+            }),
         });
 
-        localStorage.setItem(
-            "payments",
-            JSON.stringify(payments)
-        );
-
-        setPaymentList(payments);
+        await loadPayments();
 
         reset();
     };
 
-    const markAsPaid = (index) => {
-        const payments =
-            JSON.parse(localStorage.getItem("payments")) || [];
+    const markAsPaid = async (id) => {
+        await fetch("/api/payment", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                _id: id,
+                status: "Paid",
+            }),
+        });
 
-        payments[index].status = "Paid";
-
-        localStorage.setItem(
-            "payments",
-            JSON.stringify(payments)
-        );
-
-        setPaymentList(payments);
+        await loadPayments();
     };
 
     return (
         <div className="min-h-screen bg-gray-100 p-8 text-black">
+
             <h1 className="mb-6 text-3xl font-bold">
                 Payment Tracking
             </h1>
@@ -67,6 +72,7 @@ export default function PaymentsPage() {
 
                 <form onSubmit={handleSubmit(onSubmit)}>
 
+                    {/* Tenant Email */}
                     <div className="mb-4">
                         <label className="text-black">
                             Tenant Email
@@ -79,13 +85,12 @@ export default function PaymentsPage() {
                             placeholder="Enter tenant email"
                         />
 
-                        {errors.tenantEmail && (
-                            <p className="mt-1 text-red-500">
-                                {errors.tenantEmail.message}
-                            </p>
-                        )}
+                        <p className="mt-1 text-sm text-red-500">
+                            {errors.tenantEmail?.message}
+                        </p>
                     </div>
 
+                    {/* Month */}
                     <div className="mb-4">
                         <label className="text-black">
                             Month
@@ -97,13 +102,12 @@ export default function PaymentsPage() {
                             className="mt-1 w-full rounded border p-2"
                         />
 
-                        {errors.month && (
-                            <p className="mt-1 text-red-500">
-                                {errors.month.message}
-                            </p>
-                        )}
+                        <p className="mt-1 text-sm text-red-500">
+                            {errors.month?.message}
+                        </p>
                     </div>
 
+                    {/* Amount */}
                     <div className="mb-4">
                         <label className="text-black">
                             Amount
@@ -116,11 +120,9 @@ export default function PaymentsPage() {
                             placeholder="Enter rent amount"
                         />
 
-                        {errors.amount && (
-                            <p className="mt-1 text-red-500">
-                                {errors.amount.message}
-                            </p>
-                        )}
+                        <p className="mt-1 text-sm text-red-500">
+                            {errors.amount?.message}
+                        </p>
                     </div>
 
                     <button
@@ -132,6 +134,7 @@ export default function PaymentsPage() {
 
                 </form>
 
+                {/* Payment List */}
                 <div className="mt-8">
 
                     <h2 className="mb-4 text-xl font-bold">
@@ -139,13 +142,16 @@ export default function PaymentsPage() {
                     </h2>
 
                     {paymentList.length === 0 ? (
-                        <p>No payments found.</p>
+                        <p className="text-gray-600">
+                            No payments found.
+                        </p>
                     ) : (
-                        paymentList.map((payment, index) => (
+                        paymentList.map((payment) => (
                             <div
-                                key={index}
+                                key={payment._id}
                                 className="mb-4 rounded border bg-gray-50 p-4"
                             >
+
                                 <p>
                                     <strong>Email:</strong>{" "}
                                     {payment.tenantEmail}
@@ -170,13 +176,14 @@ export default function PaymentsPage() {
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            markAsPaid(index)
+                                            markAsPaid(payment._id)
                                         }
                                         className="mt-3 rounded bg-green-600 px-3 py-1 text-white"
                                     >
                                         Mark as Paid
                                     </button>
                                 )}
+
                             </div>
                         ))
                     )}
@@ -184,6 +191,7 @@ export default function PaymentsPage() {
                 </div>
 
             </div>
+
         </div>
     );
 }
