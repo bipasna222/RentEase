@@ -61,7 +61,7 @@ export default function LandlordDashboard() {
           </Link>
 
           <Link
-            href="/tenants"
+            href="/tenant"
             className="rounded bg-purple-600 px-4 py-2 text-white"
           >
             Manage Tenants

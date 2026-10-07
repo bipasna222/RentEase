@@ -1,120 +1,134 @@
 "use client";
 
-
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { registerSchema } from "@/schema/registration.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-
 export default function RegisterPage() {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        resolver: zodResolver(registerSchema),
-    });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
 
-    const router = useRouter();
+  const router = useRouter();
 
-    const onSubmit = (data) => {
-        console.log(data);
+  const onSubmit = async (data) => {
+    try {
+      const response = await fetch("/api/user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-        localStorage.setItem("user", JSON.stringify(data));
+      const result = await response.json();
 
-        router.push("/login");
-    };
+      if (!response.ok) {
+        alert(result.message);
+        return;
+      }
 
-    return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="w-96 rounded-lg bg-white p-6 shadow-lg">
-                <h1 className="mb-6 text-center text-3xl font-bold text-black">
-                    Register
-                </h1>
+      alert("Registration successful! Please login.");
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+    }
+  };
 
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    {/* Full Name */}
-                    <div className="mb-4">
-                        <label className="text-black">Full Name</label>
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-96 rounded-lg bg-white p-6 shadow-lg">
+        <h1 className="mb-6 text-center text-3xl font-bold text-black">
+          Register
+        </h1>
 
-                        <input
-                            type="text"
-                            placeholder="Enter your full name"
-                            {...register("fullName")}
-                            className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
-                        />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="mb-4">
+            <label className="text-black">Full Name</label>
 
-                        {errors.fullName && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.fullName.message}
-                            </p>
-                        )}
-                    </div>
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              {...register("fullName")}
+              className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
+            />
 
-                    {/* Email */}
-                    <div className="mb-4">
-                        <label className="text-black">Email</label>
+            {errors.fullName && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.fullName.message}
+              </p>
+            )}
+          </div>
 
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            {...register("email")}
-                            className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
-                        />
+          <div className="mb-4">
+            <label className="text-black">Email</label>
 
-                        {errors.email && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.email.message}
-                            </p>
-                        )}
-                    </div>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              {...register("email")}
+              className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
+            />
 
-                    {/* Password */}
-                    <div className="mb-4">
-                        <label className="text-black">Password</label>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
 
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            {...register("password")}
-                            className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
-                        />
+          <div className="mb-4">
+            <label className="text-black">Password</label>
 
-                        {errors.password && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.password.message}
-                            </p>
-                        )}
-                    </div>
-                    <div className="mb-4">
-                        <label className="text-black">Role</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              {...register("password")}
+              className="mt-1 w-full rounded border p-2 text-black placeholder:text-gray-400"
+            />
 
-                        <select
-                            {...register("role")}
-                            className="mt-1 w-full rounded border p-2 text-black"
-                            defaultValue=""
-                        >
-                            <option value="">Select Role</option>
-                            <option value="admin">Admin</option>
-                            <option value="landlord">Landlord</option>
-                            <option value="tenant">Tenant</option>
-                        </select>
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
 
-                        {errors.role && (
-                            <p className="mt-1 text-sm text-red-500">
-                                {errors.role.message}
-                            </p>
-                        )}
-                    </div>
-                    <button
-                        type="submit"
-                        className="w-full rounded bg-green-600 p-2 text-white"
-                    >
-                        Register
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
+          <div className="mb-4">
+            <label className="text-black">Role</label>
+
+            <select
+              {...register("role")}
+              className="mt-1 w-full rounded border p-2 text-black"
+              defaultValue=""
+            >
+              <option value="">Select Role</option>
+              <option value="admin">Admin</option>
+              <option value="landlord">Landlord</option>
+              <option value="tenant">Tenant</option>
+            </select>
+
+            {errors.role && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.role.message}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded bg-green-600 p-2 text-white"
+          >
+            Register
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 }
